@@ -1,0 +1,52 @@
+name: deploy-environment
+description: Deploy Opentofu
+inputs:
+  environment:
+    description: Environment name - accepts `dev` and `prod`
+    required: true
+  working_directory:
+    description: Working directory
+    required: true
+  aws_account_id:
+    description: AWS Account ID to run
+    required: true
+  aws_iam_role_oidc_name:
+    description: Name of the IAM Role that will be assumed via OIDC
+    default: "GitHubActions"
+  aws_region:
+    description: AWS region
+    default: "us-east-1"
+  opentofu_version:
+    description: OpenTofu version to use
+    default: 1.7.2
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.aws_iam_role_oidc_name }}
+        aws-region: ${{ inputs.aws_region }}
+        role-session-name: GitHubActions
+
+    - uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_wrapper: false
+        tofu_version: ${{ inputs.opentofu_version }}
+
+    - name: Opentofu init
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: tofu init
+
+    - name: Download Opentofu plan from previous action
+      uses: actions/download-artifact@v4
+      with:
+        name: tfplan-${{ inputs.environment }}
+        path: ${{ inputs.working_directory }}
+
+    - name: OpenTofu Apply
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: tofu apply -input=false -lock-timeout=600s tf-${{ inputs.environment }}.plan

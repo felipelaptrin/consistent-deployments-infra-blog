@@ -1,0 +1,108 @@
+name: Infrastructure CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan-assets:
+    name: Plan assets infra deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan assets deployment
+        uses: ./.github/actions/plan-infra
+        with:
+          environment: assets
+          working_directory: assets
+          aws_account_id: 730335516527
+
+  deploy-assets:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy assets infra
+    needs: [plan-assets]
+    runs-on: ubuntu-latest
+    environment:
+      name: assets
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy assets deployment
+        uses: ./.github/actions/deploy-infra
+        with:
+          environment: assets
+          working_directory: assets
+          aws_account_id: 730335516527
+
+  plan-dev:
+    name: Plan dev infra deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan dev deployment
+        uses: ./.github/actions/plan-infra
+        with:
+          environment: dev
+          working_directory: dev
+          aws_account_id: 937168356724
+
+  deploy-dev:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy dev infra
+    needs: [plan-dev, deploy-assets]
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan dev deployment
+        uses: ./.github/actions/deploy-infra
+        with:
+          environment: dev
+          working_directory: dev
+          aws_account_id: 937168356724
+
+  plan-prod:
+    name: Plan prod infra deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan prod deployment
+        uses: ./.github/actions/plan-infra
+        with:
+          environment: prod
+          working_directory: prod
+          aws_account_id: 654654203090
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy prod infra
+    needs: [plan-prod, deploy-dev]
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan prod deployment
+        uses: ./.github/actions/deploy-infra
+        with:
+          environment: prod
+          working_directory: prod
+          aws_account_id: 654654203090
