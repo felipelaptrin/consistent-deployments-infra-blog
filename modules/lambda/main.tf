@@ -67,4 +67,9 @@ resource "aws_lambda_function" "this" {
   role          = aws_iam_role.this[0].arn
   image_uri     = "${var.ecr_repo_url}:${var.app_version}"
   package_type  = "Image"
+  environment {
+    variables = {
+      TO_SAY = "Hello from Lambda!"
+    }
+  }
 }
