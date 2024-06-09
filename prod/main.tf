@@ -10,8 +10,8 @@ data "terraform_remote_state" "assets" {
 module "this" {
   source       = "../modules/lambda"
   aws_region   = "us-east-1"
-  environment  = "dev"
+  environment  = "prod"
   ecr_repo_url = data.terraform_remote_state.assets.outputs.ecr_repo_url
   deploy       = true
-  app_version  = "cc5bfc828b239b10be4bcdf8a9e84cfc75da1212" # var.app_version
+  app_version  = var.app_version
 }
