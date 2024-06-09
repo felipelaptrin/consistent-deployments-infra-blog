@@ -1,0 +1,61 @@
+name: Infrastructure CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollback_version:
+        description: Version that should be used to rollback the application
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan-prod:
+    name: Plan prod infra deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan prod deployment
+        uses: ./.github/actions/plan-infra
+        with:
+          environment: prod
+          working_directory: prod
+          aws_account_id: 654654203090
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy prod infra
+    needs: [plan-prod]
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Plan prod deployment
+        uses: ./.github/actions/deploy-infra
+        with:
+          environment: prod
+          working_directory: prod
+          aws_account_id: 654654203090
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Rollback app_version
+        env:
+          VERSION: ${{ github.event.inputs.rollback_version }}
+        run: sed -i -E 's/(app_version\s*=\s*").*"/\1'"${VERSION}"'"/' prod/prod.tfvars
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
