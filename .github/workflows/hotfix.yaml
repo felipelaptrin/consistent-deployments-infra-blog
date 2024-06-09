@@ -22,7 +22,7 @@ jobs:
       - name: Rollback app_version
         env:
           VERSION: ${{ github.event.inputs.rollback_version }}
-        run: sed -i '' -E 's/(app_version\s*=\s*")[^"]*"/\1'"${VERSION}"'"/' prod/prod.tfvars
+        run: sed -i '' -E "s/(app_version\s*=\s*).*/\1\"${VERSION}\"/" prod/prod.tfvars
 
       - name: Plan prod deployment
         uses: ./.github/actions/plan-infra
@@ -42,7 +42,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Plan prod deployment
+      - name: Deploy prod deployment
         uses: ./.github/actions/deploy-infra
         with:
           environment: prod
@@ -57,7 +57,7 @@ jobs:
       - name: Rollback app_version
         env:
           VERSION: ${{ github.event.inputs.rollback_version }}
-        run: sed -i -E 's/(app_version\s*=\s*").*"/\1'"${VERSION}"'"/' prod/prod.tfvars
+        run: sed -i '' -E "s/(app_version\s*=\s*).*/\1\"${VERSION}\"/" prod/prod.tfvars
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
