@@ -1,1 +1,1 @@
-app_version="4d324e1140761ae7c2f3c65dbace580ad8414ca1"
+app_version="fea18f2595ef250eee020aee633666f349a13973"
