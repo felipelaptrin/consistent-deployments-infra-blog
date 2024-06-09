@@ -19,6 +19,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Rollback app_version
+        env:
+          VERSION: ${{ github.event.inputs.rollback_version }}
+        run: sed -i -E 's/(app_version\s*=\s*").*"/\1'"${VERSION}"'"/' prod/prod.tfvars
+
       - name: Plan prod deployment
         uses: ./.github/actions/plan-infra
         with:
