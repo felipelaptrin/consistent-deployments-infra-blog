@@ -1,4 +1,4 @@
-name: Infrastructure CI/CD
+name: Hotflow CI/CD
 
 on:
   workflow_dispatch:
